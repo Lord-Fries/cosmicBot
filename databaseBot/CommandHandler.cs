@@ -7,8 +7,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+/*
+ This class in unneccesary and will be removed in future iterations.
+ */
+
 //Custom Classes go here
-// using CommandsClass;
+//using CommandsClass;
 
 namespace CommandHandlerClass
 {
