@@ -88,12 +88,21 @@ namespace CosmicBot
             string command = "";
             int lengthOfCommand = -1;
 
+            //Filtering Messages
+            if (!message.Content.StartsWith('_')) //This is the Prefix
+                return;
             // The bot should never respond to itself.
             if (message.Author.Id == _client.CurrentUser.Id)
                 return;
 
+            if (message.Content.Contains(' '))
+                lengthOfCommand = message.Content.IndexOf(' ');
+            else
+                lengthOfCommand = message.Content.Length;
 
-            if (message.Content == "!ping")
+            command = message.Content.Substring(1, lengthOfCommand - 1).ToLower();
+
+            if (command.Equals("ping"))
             {
                 // Create a new ComponentBuilder, in which dropdowns & buttons can be created.
                 var cb = new ComponentBuilder()
