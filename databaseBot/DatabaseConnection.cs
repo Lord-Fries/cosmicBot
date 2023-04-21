@@ -33,10 +33,10 @@ namespace DatabaseConnectionClass
         private void Initialize()
         {
             server = "localhost"; //Since the Bot will be run on the same system, this way will work 
-            uid = "test";
-            password = "test";
-            database = "sample";
-            table = "animals";
+            uid = "testing";
+            password = "testing123";
+            database = "animals";
+            table = "pets";
             string connectionString;
             connectionString = "SERVER=" + server + ";" + "DATABASE=" + database + ";"
                                 + "UID=" + uid + ";" + "PASSWORD=" + password + ";";
@@ -108,7 +108,7 @@ namespace DatabaseConnectionClass
         //Update statement
         public void Update()
         {
-            string query = "UDPATE " + table + " SET species = 'D' WHERE `name` = 'Rover'";
+            string query = "UPDATE " + table + " SET species = 'D' WHERE id = 4";
             //Opens Connection
             if (this.OpenConnection() == true)
             {

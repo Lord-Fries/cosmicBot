@@ -3,6 +3,9 @@ using Discord.WebSocket;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using DatabaseConnectionClass;
+using System.Security.Cryptography.X509Certificates;
+using Discord.Commands;
 
 namespace CosmicBot
 {
@@ -20,6 +23,8 @@ namespace CosmicBot
     // - At the guides: https://discordnet.dev/guides/int_framework/intro.html
     class Program
     {
+        DBConnect test = new DBConnect(); //allows for connections to the database to be made via the DatabaseConnection Class
+
         // Non-static readonly fields can only be assigned in a constructor.
         // If you want to assign it elsewhere, consider removing the readonly keyword.
         private readonly DiscordSocketClient _client;
@@ -44,6 +49,7 @@ namespace CosmicBot
             // It is recommended to Dispose of a client when you are finished
             // using it, at the end of your app's lifetime.
             _client = new DiscordSocketClient(config);
+
 
             // Subscribing to client events, so that we may receive them whenever they're invoked.
             _client.Log += LogAsync;
@@ -111,6 +117,24 @@ namespace CosmicBot
                 // Send a message with content 'pong', including a button.
                 // This button needs to be build by calling .Build() before being passed into the call.
                 await message.Channel.SendMessageAsync("pong!", components: cb.Build());
+            }
+
+            if (command.Equals("echo"))
+            {
+                string echo = " ";
+                if (message.Content.Contains(""))
+                {
+                    echo = message.Content.Substring(5);
+                    //Suppose to make it so the value is not null if the user doesnt add anything after the command
+                    //Does not work currently
+                    if(echo == " ")
+                    {
+                        echo = "Please type something after the command!";
+                    }
+                }
+                //this is a test command for a test database custom insert from the user
+                await message.Channel.SendMessageAsync(echo);
+
             }
         }
 
