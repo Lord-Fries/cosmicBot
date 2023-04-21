@@ -7,7 +7,7 @@ using Discord.Commands;
 
 //Custom Classes
 
-
+/*
 namespace CosmicBot
 {
     client.Ready += Client_Ready;
@@ -17,3 +17,5 @@ namespace CosmicBot
         
     }
 }
+
+*/

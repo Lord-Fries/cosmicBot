@@ -1,96 +1,125 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Discord.Commands;
-using System.Reflection;
-using System.IO;
-
-//Custom Classes
-// using CommandHandlerClass;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CosmicBot
 {
-    public class Program
+    // This is a minimal, bare-bones example of using Discord.Net.
+    //
+    // If writing a bot with commands/interactions, we recommend using the Discord.Net.Commands/Discord.Net.Interactions
+    // framework, rather than handling them yourself, like we do in this sample.
+    //
+    // You can find samples of using the command framework:
+    // - Here, under the TextCommandFramework sample
+    // - At the guides: https://discordnet.dev/guides/text_commands/intro.html
+    //
+    // You can find samples of using the interaction framework:
+    // - Here, under the InteractionFramework sample
+    // - At the guides: https://discordnet.dev/guides/int_framework/intro.html
+    class Program
     {
-        public static Task Main(string[] args) => new Program().MainAsync();
+        // Non-static readonly fields can only be assigned in a constructor.
+        // If you want to assign it elsewhere, consider removing the readonly keyword.
+        private readonly DiscordSocketClient _client;
 
-        private Task Log(LogMessage msg)
+        // Discord.Net heavily utilizes TAP for async, so we create
+        // an asynchronous context from the beginning.
+        static void Main(string[] args)
+            => new Program()
+                .MainAsync()
+                .GetAwaiter()
+                .GetResult();
+
+        public Program()
         {
-            Console.WriteLine(msg.ToString());
+            // Config used by DiscordSocketClient
+            // Define intents for the client
+            var config = new DiscordSocketConfig
+            {
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
+            };
+
+            // It is recommended to Dispose of a client when you are finished
+            // using it, at the end of your app's lifetime.
+            _client = new DiscordSocketClient(config);
+
+            // Subscribing to client events, so that we may receive them whenever they're invoked.
+            _client.Log += LogAsync;
+            _client.Ready += ReadyAsync;
+            _client.MessageReceived += MessageReceivedAsync;
+            _client.InteractionCreated += InteractionCreatedAsync;
+        }
+
+        public async Task MainAsync()
+        {
+            // Tokens should be considered secret data, and never hard-coded.
+            var token = File.ReadAllText("token.txt");
+            await _client.LoginAsync(TokenType.Bot, token);
+            // Different approaches to making your token a secret is by putting them in local .json, .yaml, .xml or .txt files, then reading them on startup.
+
+            await _client.StartAsync();
+
+            // Block the program until it is closed.
+            await Task.Delay(Timeout.Infinite);
+        }
+
+        private Task LogAsync(LogMessage log)
+        {
+            Console.WriteLine(log.ToString());
             return Task.CompletedTask;
         }
 
-        private DiscordSocketClient _client;
-        public async Task MainAsync()
+        // The Ready event indicates that the client has opened a
+        // connection and it is now safe to access the cache.
+        private Task ReadyAsync()
         {
-            // This activates the Bot on discord and authorizes it via the token 
-            _client = new DiscordSocketClient();
-            _client.Log += Log;
-            //  You can assign your bot token to a string, and pass that in to connect.
-            //  This is, however, insecure, particularly if you plan to have your code hosted in a public repository.
-            //var token = "token"; //Should only be used for testing purposes, otherwise the other method is more secure
-            var token = File.ReadAllText("token.txt");
+            Console.WriteLine($"{_client.CurrentUser} is connected!");
 
-            await _client.LoginAsync(TokenType.Bot, token);
-            await _client.StartAsync();
-
-            //Blocks this task until the program is closed
-            await Task.Delay(-1);
+            return Task.CompletedTask;
         }
 
-        public class CommandHandler
+        // This is not the recommended way to write a bot - consider
+        // reading over the Commands Framework sample.
+        private async Task MessageReceivedAsync(SocketMessage message)
         {
-            private readonly DiscordSocketClient _client;
-            private readonly CommandService _commands;
+            //variables
+            string command = "";
+            int lengthOfCommand = -1;
 
-            //Retireve client and command service instance via ctor
-            public CommandHandler(DiscordSocketClient client, CommandService commands)
+            // The bot should never respond to itself.
+            if (message.Author.Id == _client.CurrentUser.Id)
+                return;
+
+
+            if (message.Content == "!ping")
             {
-                _commands = commands;
-                _client = client;
-            }
+                // Create a new ComponentBuilder, in which dropdowns & buttons can be created.
+                var cb = new ComponentBuilder()
+                    .WithButton("Click me!", "unique-id", ButtonStyle.Primary);
 
-            public async Task InstallCommandsAsync()
+                // Send a message with content 'pong', including a button.
+                // This button needs to be build by calling .Build() before being passed into the call.
+                await message.Channel.SendMessageAsync("pong!", components: cb.Build());
+            }
+        }
+
+        // For better functionality & a more developer-friendly approach to handling any kind of interaction, refer to:
+        // https://discordnet.dev/guides/int_framework/intro.html
+        private async Task InteractionCreatedAsync(SocketInteraction interaction)
+        {
+            // safety-casting is the best way to prevent something being cast from being null.
+            // If this check does not pass, it could not be cast to said type.
+            if (interaction is SocketMessageComponent component)
             {
-                //Hook the Message received event into our command handler
-                _client.MessageReceived += HandleCommandAsync;
-                // Here we discover all of the command modules in the entry 
-                // assembly and load them. Starting from Discord.NET 2.0, a
-                // service provider is required to be passed into the
-                // module registration method to inject the 
-                // required dependencies.
-                //
-                // If you do not use Dependency Injection, pass null.
-                // See Dependency Injection guide for more information.
-                await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
-                                            services: null);
+                // Check for the ID created in the button mentioned above.
+                if (component.Data.CustomId == "unique-id")
+                    await interaction.RespondAsync("Thank you for clicking my button!");
+
+                else
+                    Console.WriteLine("An ID has been received that has no handler!");
             }
-
-            private async Task HandleCommandAsync(SocketMessage messageParam)
-            {
-                // Dont process the command if it was a system Message
-                var message = messageParam as SocketUserMessage;
-                if (message == null) return;
-
-                //Create a number to track where the prefix ends and the command begins
-                int argPos = 0;
-
-                //Determine if the message is a command based on the prefix and make sure no bots trigger commands 
-                if (!(message.HasCharPrefix('_', ref argPos) ||
-                    message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
-                    message.Author.IsBot)
-                    return;
-
-                //Create a websocket based command context based on the message
-                var context = new SocketCommandContext(_client, message);
-
-                //Execture the command with the command context
-                //along with te service provider for precondition checks
-                await _commands.ExecuteAsync(
-                    context: context,
-                    argPos: argPos,
-                    services: null);
-            }
-
         }
     }
 }

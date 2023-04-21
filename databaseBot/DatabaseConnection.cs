@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 /*
  This Class will hold the queries required for the Database
+May need to Re-write in a new class in case this doesnt work due to being made originally in a Form
 */
 
 
@@ -46,6 +47,9 @@ namespace DatabaseConnectionClass
         private bool OpenConnection()
         {
             try
+
+
+
             {
                 connection.Open();
                 return true;
