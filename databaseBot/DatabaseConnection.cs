@@ -89,6 +89,33 @@ namespace DatabaseConnectionClass
             }
         }
 
+        //Custom Statements here for calling
+        public string pinger()
+        {
+            string query = "CALL pinging();";
+            string dbPing;
+            if(this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+
+                dataReader = cmd.ExecuteReader(0);
+                while (dataReader.Read())
+                {
+                    dbPing = dataReader.GetString(0);
+                    this.CloseConnection();
+                    return dbPing;
+                }
+                dbPing = "No Connection Please try again Later or contact your admin";
+                return dbPing;
+            }
+            else
+            {
+                dbPing = "No Connection Please try again Later or contact your admin";
+                return dbPing;
+            }
+        }
+
         //Insert statement
         public void Insert()
         {

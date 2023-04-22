@@ -116,24 +116,26 @@ namespace CosmicBot
 
                 // Send a message with content 'pong', including a button.
                 // This button needs to be build by calling .Build() before being passed into the call.
-                await message.Channel.SendMessageAsync("pong!", components: cb.Build());
+                //Calls the pinger method from the DBconnection Class, this will grab the Pong string from the database
+                string ping = test.pinger();
+                Console.WriteLine(ping);
+                await message.Channel.SendMessageAsync(ping, components: cb.Build());
             }
 
+            //This command takes a single string input from the user, splits each "parameter" from the user that is seperated by a ","
             if (command.Equals("echo"))
             {
                 string echo = " ";
+                string[] echoSplit = echo.Split(",");
                 if (message.Content.Contains(""))
                 {
                     echo = message.Content.Substring(5);
-                    //Suppose to make it so the value is not null if the user doesnt add anything after the command
-                    //Does not work currently
-                    if(echo == " ")
-                    {
-                        echo = "Please type something after the command!";
-                    }
+
+                    echoSplit = echo.Split(", ");
                 }
-                //this is a test command for a test database custom insert from the user
-                await message.Channel.SendMessageAsync(echo);
+                
+                foreach (string echos in echoSplit)
+                await message.Channel.SendMessageAsync(echos);
 
             }
         }
