@@ -5,6 +5,8 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
+using System.Xml.Linq;
 
 /*
  This Class will hold the queries required for the Database
@@ -113,6 +115,21 @@ namespace DatabaseConnectionClass
             {
                 dbPing = "No Connection Please try again Later or contact your admin";
                 return dbPing;
+            }
+        }
+
+        public void petInsert(string nm, string sp, int age)
+        {                                                               //(" + nm + "," + sp + "," + age + ")
+            string query = $"INSERT INTO pets(`name`, species, age) VALUES('{nm}', '{sp}', '{age}');"; 
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+            else
+            {
+                Console.WriteLine("Error, could not open a connection to the database");
             }
         }
 

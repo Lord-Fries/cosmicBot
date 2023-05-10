@@ -58,6 +58,7 @@ namespace CosmicBot
             _client.InteractionCreated += InteractionCreatedAsync;
         }
 
+
         public async Task MainAsync()
         {
             // Tokens should be considered secret data, and never hard-coded.
@@ -136,6 +137,52 @@ namespace CosmicBot
                 
                 foreach (string echos in echoSplit)
                 await message.Channel.SendMessageAsync(echos);
+            }
+            if(command.Equals("pet"))
+            {
+                string pet = " ";
+                string name = " ";
+                string species = " ";
+                string ageString = " ";
+                int age;
+                string[] petSplit = pet.Split(", ");
+                if (message.Content.Contains(""))
+                {
+                    pet = message.Content.Substring(5); //Start substring where the user params begin
+                    petSplit = pet.Split(", ");
+                    name = petSplit[0];
+                    species = petSplit[1];
+                    ageString = petSplit[2]; //int.Parse(petSplit[2]);
+                    
+                    if((name.Length <= 50))
+                    {
+                        if(species.Length == 1)
+                        {
+                            if(int.TryParse(ageString, out int result))
+                            {
+                                age = int.Parse(ageString);
+                                //Console.WriteLine(name + "\n" + species + "\n" + age); //Testing Purposes only
+                                test.petInsert(name, species, age);
+                            }
+                            else
+                            {
+                                Console.WriteLine(result);
+                                await message.Channel.SendMessageAsync("Please make sure you only input a number for your pets age");
+                            }
+                        }
+                        else
+                        {
+                            await message.Channel.SendMessageAsync("Please make sure your pets type is a single alphabetical character");
+                        }
+                    }
+                    else
+                    {
+                        await message.Channel.SendMessageAsync("Please make sure your Pets name is 50 or less Characters long");
+                    }
+                    //string query = $"INSERT INTO pets(`name`, species, age) VALUES({nm}, {sp}, {age});"; //How the Query Works
+                    //Console.WriteLine(name + "\n" + species +"\n" + age); //Testing Purposes only
+                    //test.petInsert(name, species, age);
+                }
 
             }
         }
