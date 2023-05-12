@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using System.Xml.Linq;
+using System.Collections;
+using System.Net.NetworkInformation;
+using System.Diagnostics.Metrics;
 
 /*
  This Class will hold the queries required for the Database
@@ -23,7 +26,7 @@ namespace DatabaseConnectionClass
         private string uid;
         private string password;
         private string database;
-        private string table;
+        private string table; //No longer needed since there are multiple tables in the DB now
 
         //Constructor
         public DBConnect()
@@ -35,9 +38,9 @@ namespace DatabaseConnectionClass
         private void Initialize()
         {
             server = "localhost"; //Since the Bot will be run on the same system, this way will work 
-            uid = "testing";
-            password = "testing123";
-            database = "animals";
+            uid = "Bot"; //Will eventually make these values tokens for security purposes
+            password = "cosmicBot123";
+            database = "tcn";
             table = "pets";
             string connectionString;
             connectionString = "SERVER=" + server + ";" + "DATABASE=" + database + ";"
@@ -49,9 +52,6 @@ namespace DatabaseConnectionClass
         private bool OpenConnection()
         {
             try
-
-
-
             {
                 connection.Open();
                 return true;
@@ -118,9 +118,12 @@ namespace DatabaseConnectionClass
             }
         }
 
-        public void petInsert(string nm, string sp, int age)
-        {                                                               //(" + nm + "," + sp + "," + age + ")
-            string query = $"INSERT INTO pets(`name`, species, age) VALUES('{nm}', '{sp}', '{age}');"; 
+        /*UserInsert should only be used when a new member goes to create their first nation, and if they are not
+         * in the the DB already, this function goes off and adds them
+         */
+        public void UserInsert(string nt, ulong dID)
+        {
+            string query = $"INSERT INTO users(nameTag, discordID) VALUES('{nt}', '{dID}');"; 
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
@@ -131,6 +134,120 @@ namespace DatabaseConnectionClass
             {
                 Console.WriteLine("Error, could not open a connection to the database");
             }
+        }
+
+        public int IsUser(ulong uid) //0 is true, 1 is false, anything else is a DB connection error 
+        {
+            string query = $"CALL isUser({uid});";
+            long isUser;
+            string errorMessage;
+            int returnVal = 2;
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+
+                dataReader = cmd.ExecuteReader(0);
+                while (dataReader.Read())
+                {
+                    isUser = dataReader.GetInt64(0);
+                    this.CloseConnection();
+                    if(isUser == 0)
+                    {
+                        returnVal = 0;
+                        return returnVal;
+                    }
+                    else if(isUser == 1)
+                    {
+                        returnVal = 1;
+                        return returnVal;
+                    }
+                    else
+                    {
+                        return returnVal; //Returns default value of 2, which is a error 
+                    }
+                }
+                errorMessage = "No Connection Please try again Later or contact your admin, return value 2";
+                Console.WriteLine(errorMessage);
+                return 2;
+            }
+            else
+            {
+                errorMessage = "No Connection Please try again Later or contact your admin, return value 3";
+                return 3;
+            }
+        }
+
+        public int GetUserDBID(ulong uid)
+        {
+            int userDBID; //The Users DB ID 
+            string query = $"SELECT userID FROM users WHERE discordID = {uid};";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+                dataReader = cmd.ExecuteReader(0);
+                while (dataReader.Read())
+                {
+                    userDBID = dataReader.GetInt32(0);
+                    this.CloseConnection();
+                    return userDBID;
+                }
+                return 2;
+            }
+            else
+            {
+                return 2;
+            }
+        }
+
+        public void NationInsert(string natName, ulong uid, int userDBID)
+        {
+            string query = $"INSERT INTO nations (userID, nationName, dateFounded, techID) " +
+                           $"VALUES ({userDBID}, '{natName}', CURDATE(), 1);";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+            else
+            {
+                Console.WriteLine("Error, could not open a connection to the database for nation insert");
+            }
+        }
+
+        //This function will add a nation to a user who creates it,
+        //and if the user does not exist it will create a user aswell
+        public void CreateNationInsert(string natName, ulong uid, string nt)
+        {
+            //First verify if they are a user or not
+            //0 is true, 1 is false, anything else is a DB connection error 
+            int isUser = IsUser(uid);
+            if (isUser == 0) //If they are a user
+            {
+                int userDBID = GetUserDBID(uid); //The Users DB ID
+                if (userDBID == 0){ Console.WriteLine("Error with getting the user DBID"); }
+                else
+                {
+                   NationInsert(natName, uid, userDBID); 
+                }
+            }
+            else if (isUser == 1) //If they are not a user
+            {
+                UserInsert(nt, uid);
+                int userDBID = GetUserDBID(uid); //The Users DB ID
+                if (userDBID == 0) { Console.WriteLine("Error with getting the user DBID"); }
+                else
+                {
+                    NationInsert(natName, uid, userDBID);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Error, Issue with createNationInsert Function");
+            }
+            
         }
 
         //Insert statement
