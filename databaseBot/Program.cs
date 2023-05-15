@@ -152,8 +152,16 @@ namespace CosmicBot
             if (command.Equals("createnation"))
             {
                 ulong user = message.Author.Id;
-                string nameTag = _client.GetUserAsync(user).Result.ToString();
-                string natName = message.Content.Substring(14);
+                try
+                {
+                    string nameTag = _client.GetUserAsync(user).Result.ToString();
+                    string natName = message.Content.Substring(14);
+                    test.CreateNationInsert(natName, user, nameTag);
+                }
+                catch
+                {
+                    await message.Channel.SendMessageAsync("Please Contact your Admin about this issue");
+                }
             }
         }
 
