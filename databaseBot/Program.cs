@@ -149,6 +149,8 @@ namespace CosmicBot
                 foreach (string echos in echoSplit)
                 await message.Channel.SendMessageAsync(echos);
             }
+
+            //Commands that will pertain to Nations
             if (command.Equals("createnation"))
             {
                 ulong user = message.Author.Id;
@@ -160,9 +162,59 @@ namespace CosmicBot
                 }
                 catch
                 {
-                    await message.Channel.SendMessageAsync("Please Contact your Admin about this issue");
+                    await message.Channel.SendMessageAsync("Please make sure you have inputted the command correctly or contact a staff member for help");
                 }
             }
+            if (command.Equals("isnation"))
+            {
+                string natName = message.Content.Substring(10);
+                int number = test.IsNation(natName);
+                //await message.Channel.SendMessageAsync($"Nation Name - {natName} return value - {number}");
+                if(number == 0)
+                {
+                    await message.Channel.SendMessageAsync($"{natName} is a current nation in use");
+                }
+                else
+                {
+                    await message.Channel.SendMessageAsync($"{natName} is not a nation currently");
+                } 
+            }
+            if (command.Equals("renamenation"))
+            {
+                ulong user = message.Author.Id;
+                string name = " ";
+                string[] nameSplit = name.Split(",");
+                int length = "renamenation".Length + 2;
+                if (message.Content.Contains(""))
+                {
+                    name = message.Content.Substring(length);
+                    nameSplit = name.Split(", ");
+                }
+                try
+                {
+                    string oldName = nameSplit[0];
+                    string newName = nameSplit[1];
+                    string nameTag = _client.GetUserAsync(user).Result.ToString();
+                    //await message.Channel.SendMessageAsync($"Old Name - {oldName}, New Name - {newName}, Length of command - {length}");
+                    int uid = test.GetUserDBID(user);
+                    bool rename = test.RenameNation(oldName, newName, user, nameTag);
+                    if(rename == true)
+                    {
+                        await message.Channel.SendMessageAsync($"{oldName} is now {newName}");
+                    }
+                    else
+                    {
+                        await message.Channel.SendMessageAsync("could not rename your nation, please check if you had inputted the command correctly");
+                    }
+                }
+                catch
+                {
+                    await message.Channel.SendMessageAsync("Could not Rename your nation, please check that the old name is correct");
+                }
+            }
+
+
+
         }
 
             // For better functionality & a more developer-friendly approach to handling any kind of interaction, refer to:

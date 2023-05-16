@@ -237,7 +237,10 @@ namespace DatabaseConnectionClass
             {
                 UserInsert(nt, uid);
                 int userDBID = GetUserDBID(uid); //The Users DB ID
-                if (userDBID == 0) { Console.WriteLine("Error with getting the user DBID"); }
+                if (userDBID == 0) 
+                { 
+                    Console.WriteLine("Error with getting the user DBID"); 
+                }
                 else
                 {
                     NationInsert(natName, uid, userDBID);
@@ -247,13 +250,121 @@ namespace DatabaseConnectionClass
             {
                 Console.WriteLine("Error, Issue with createNationInsert Function");
             }
-            
+        }
+
+        //Renaming a Nation starts here
+        public int IsNation(string natName) //Checks if the nation exists
+        {
+            string query = $"CALL isNation('{natName}');";
+            if (this.OpenConnection() == true)
+            {
+                long isNation;
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+                dataReader = cmd.ExecuteReader(0);
+                while (dataReader.Read())
+                {
+                    isNation = dataReader.GetInt64(0);
+                    this.CloseConnection();
+                    //Console.WriteLine(isNation); //testing purposes only
+                    return ((int)isNation);
+                }
+                return 1;
+            }
+            else
+            {
+                Console.WriteLine("Error, could not open a connection to the database to check if its a nation");
+                return 1;
+            }
+        }
+        public int GetNationDBID(string natNM)
+        {
+            int natDBID; //The Nations DB ID 
+            string query = $"SELECT nationID FROM nations WHERE nationName = '{natNM}' LIMIT 1;";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+                dataReader = cmd.ExecuteReader(0);
+                while (dataReader.Read())
+                {
+                    natDBID = dataReader.GetInt32(0);
+                    this.CloseConnection();
+                    return natDBID;
+                }
+                return 0;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public void RenameNationUpdate(string oldNM, string newNM, int userDBID) //actually renames the nation
+        {
+            int nationDBID = GetNationDBID(oldNM);
+            string query = $"UPDATE nations SET nationName = '{newNM}' WHERE (nationID = {nationDBID} AND userID = {userDBID});";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+            else
+            {
+                Console.WriteLine("Error, could not open a connection to the database for rename nation");
+            }
+        }
+        public bool RenameNation(string oldNM, string newNM, ulong uid, string nt)
+        {
+            //First Check if they are a user
+            int isUser = IsUser(uid);
+            if (isUser == 0) //If they are a user
+            {
+                int userDBID = GetUserDBID(uid); //The Users DB ID
+                if (userDBID == 0) { 
+                    Console.WriteLine("Error with getting the user DBID");
+                    return false;
+                }
+                else
+                { //The only path that matters here, the rest will return false as a
+                  //nation would not have been made as a user would not have existed to create it
+                    int isNation = IsNation(oldNM);
+                    if(isNation == 0)
+                    {
+                        RenameNationUpdate(oldNM, newNM, userDBID);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            else if (isUser == 1) //If they are not a user
+            {
+                UserInsert(nt, uid);
+                int userDBID = GetUserDBID(uid); //The Users DB ID
+                if (userDBID == 0) { 
+                    Console.WriteLine("Error with getting the user DBID"); 
+                    return false;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Error, Issue with RenameNation Function");
+                return false;
+            }
         }
 
         //Insert statement
         public void Insert()
         {
-            string query = "INSERT INTO " + table + "(`name`, species, age) VALUES('Roxxane', 'c', 4)";
+            string query = "INSERT INTO (`name`, species, age) VALUES('Roxxane', 'c', 4)";
             //Open Connection
             if (this.OpenConnection() == true)
             {
