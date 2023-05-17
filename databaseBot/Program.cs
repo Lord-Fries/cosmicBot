@@ -165,6 +165,24 @@ namespace CosmicBot
                     await message.Channel.SendMessageAsync("Please make sure you have inputted the command correctly or contact a staff member for help");
                 }
             }
+            if (command.Equals("nations"))
+            {
+                int length = "nations".Length + 2;
+                try
+                {
+                    ulong mentionedUser = MentionUtils.ParseUser(message.Content.Substring(length));
+                    string[] nationsList = test.GetUsersNations(mentionedUser);
+                    foreach (string nations in nationsList)
+                        await message.Channel.SendMessageAsync(nations);
+                }
+                catch
+                {
+                    ulong author = message.Author.Id;
+                    string[] nationsList = test.GetUsersNations(author);
+                    foreach (string nations in nationsList)
+                        await message.Channel.SendMessageAsync(nations);
+                }
+            }
             if (command.Equals("isnation"))
             {
                 string natName = message.Content.Substring(10);

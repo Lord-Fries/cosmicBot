@@ -361,6 +361,53 @@ namespace DatabaseConnectionClass
             }
         }
 
+        //Listing a users Nations here
+        public int GetNationCount(ulong uid)
+        {
+            int userDBID = GetUserDBID(uid);
+            string query = $"SELECT COUNT(nationName) FROM nations WHERE userID = {userDBID};";
+            int natCount;
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+                dataReader = cmd.ExecuteReader(0);
+                while (dataReader.Read())
+                {
+                    natCount = dataReader.GetInt32(0);
+                    this.CloseConnection();
+                    return natCount;
+                }
+                return 0;
+            }
+            return 0;
+        }
+        public string[] GetUsersNations(ulong uid)
+        {
+            int userDBID = GetUserDBID(uid);
+            string query = $"SELECT nationName FROM nations WHERE userID = {userDBID};";
+            int nationCount = GetNationCount(uid);
+            string[] nations = new string[nationCount];
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+                dataReader = cmd.ExecuteReader(0);
+                int num = 0;
+                while (dataReader.Read())
+                {
+                    nations[num] = dataReader.GetString(0);
+                    num++;
+                }
+                this.CloseConnection();
+                return nations;
+            }
+            else
+            {
+                nations[1] = "No Connection";
+                return nations;
+            }
+        }
         //Insert statement
         public void Insert()
         {
