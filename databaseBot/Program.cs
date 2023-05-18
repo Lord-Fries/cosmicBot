@@ -9,6 +9,8 @@ using Discord.Commands;
 using System.Net;
 using Discord.Rest;
 using System.Security.Cryptography;
+using Discord.Interactions;
+using CosmicBotCommands;
 
 namespace CosmicBot
 {
@@ -26,7 +28,8 @@ namespace CosmicBot
     // - At the guides: https://discordnet.dev/guides/int_framework/intro.html
     class Program
     {
-        DBConnect test = new DBConnect(); //allows for connections to the database to be made via the DatabaseConnection Class
+        DBConnect tcnDB = new DBConnect(); //allows for connections to the database to be made via the DatabaseConnection Class
+        CosmicCommands custom = new CosmicCommands(); //Custom Commands
 
         // Non-static readonly fields can only be assigned in a constructor.
         // If you want to assign it elsewhere, consider removing the readonly keyword.
@@ -112,6 +115,11 @@ namespace CosmicBot
 
             command = message.Content.Substring(1, lengthOfCommand - 1).ToLower();
 
+            if (command.Equals("help"))
+            {
+                string help = custom.Help();
+                await message.Channel.SendMessageAsync(help);
+            }
 
             if (command.Equals("ping"))
             {
@@ -122,7 +130,7 @@ namespace CosmicBot
                 // Send a message with content 'pong', including a button.
                 // This button needs to be build by calling .Build() before being passed into the call.
                 //Calls the pinger method from the DBconnection Class, this will grab the Pong string from the database
-                string ping = test.pinger();
+                string ping = tcnDB.pinger();
                 Console.WriteLine(ping);
                 await message.Channel.SendMessageAsync(ping, components: cb.Build());
             }
@@ -158,7 +166,9 @@ namespace CosmicBot
                 {
                     string nameTag = _client.GetUserAsync(user).Result.ToString();
                     string natName = message.Content.Substring(14);
-                    test.CreateNationInsert(natName, user, nameTag);
+                    tcnDB.CreateNationInsert(natName, user, nameTag);
+                    await message.Channel.SendMessageAsync($"{natName} is now a nation you control!");
+                    
                 }
                 catch
                 {
@@ -171,14 +181,14 @@ namespace CosmicBot
                 try
                 {
                     ulong mentionedUser = MentionUtils.ParseUser(message.Content.Substring(length));
-                    string[] nationsList = test.GetUsersNations(mentionedUser);
+                    string[] nationsList = tcnDB.GetUsersNations(mentionedUser);
                     foreach (string nations in nationsList)
                         await message.Channel.SendMessageAsync(nations);
                 }
                 catch
                 {
                     ulong author = message.Author.Id;
-                    string[] nationsList = test.GetUsersNations(author);
+                    string[] nationsList = tcnDB.GetUsersNations(author);
                     foreach (string nations in nationsList)
                         await message.Channel.SendMessageAsync(nations);
                 }
@@ -186,7 +196,7 @@ namespace CosmicBot
             if (command.Equals("isnation"))
             {
                 string natName = message.Content.Substring(10);
-                int number = test.IsNation(natName);
+                int number = tcnDB.IsNation(natName);
                 //await message.Channel.SendMessageAsync($"Nation Name - {natName} return value - {number}");
                 if(number == 0)
                 {
@@ -214,8 +224,8 @@ namespace CosmicBot
                     string newName = nameSplit[1];
                     string nameTag = _client.GetUserAsync(user).Result.ToString();
                     //await message.Channel.SendMessageAsync($"Old Name - {oldName}, New Name - {newName}, Length of command - {length}");
-                    int uid = test.GetUserDBID(user);
-                    bool rename = test.RenameNation(oldName, newName, user, nameTag);
+                    int uid = tcnDB.GetUserDBID(user);
+                    bool rename = tcnDB.RenameNation(oldName, newName, user, nameTag);
                     if(rename == true)
                     {
                         await message.Channel.SendMessageAsync($"{oldName} is now {newName}");
