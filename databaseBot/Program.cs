@@ -302,10 +302,7 @@ namespace CosmicBot
 
             if (command.Equals("test"))
             {
-                string nation = message.Content.Substring(lengthOfCommand + 1);
-
-                int user = tcnDB.GetNationsUserDBID(nation);
-                await message.Channel.SendMessageAsync($"{user}");
+                await message.Channel.SendMessageAsync($"This Command does nothing currently, good try tho");
             }
 
 
