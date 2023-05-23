@@ -253,6 +253,7 @@ namespace DatabaseConnectionClass
         }
 
         //Renaming a Nation starts here
+        // 0 it is a nation, 1 it is not a nation, anything else is a error
         public int IsNation(string natName) //Checks if the nation exists
         {
             string query = $"CALL isNation('{natName}');";
@@ -277,6 +278,33 @@ namespace DatabaseConnectionClass
                 return 1;
             }
         }
+        public bool IsUsersNation(string natName, ulong uid)
+        {
+            int isNation = IsNation(natName);
+            int userDB = GetUserDBID(uid);
+            // 0 true, 1 False
+            string query = $"SELECT IF(ISNULL((SELECT nationName FROM nations WHERE nationname = '{natName}' AND userID = {userDB})), 1, 0);";
+            if (isNation == 0)
+            {
+                if (this.OpenConnection() == true)
+                {
+                    MySqlCommand cmd = new MySqlCommand(query, connection);
+                    MySqlDataReader dataReader;
+                    dataReader = cmd.ExecuteReader(0);
+                    while (dataReader.Read())
+                    {
+                        int controlled = dataReader.GetInt32(0);
+                        this.CloseConnection();
+                        if (controlled == 0) { return true; }
+                        else { return false; }
+                    }
+                    return false;
+                }
+                return false;
+            }
+            return false;
+        }
+
         public int GetNationDBID(string natNM)
         {
             int natDBID; //The Nations DB ID 

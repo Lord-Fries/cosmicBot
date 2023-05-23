@@ -103,15 +103,19 @@ namespace CosmicBot
 
             //Filtering Messages
             if (!message.Content.StartsWith('_')) //This is the Prefix
-                return;
+            { return; }
             // The bot should never respond to itself.
             if (message.Author.Id == _client.CurrentUser.Id)
-                return;
+            { return; }
 
             if (message.Content.Contains(' '))
+            {
                 lengthOfCommand = message.Content.IndexOf(' ');
+            }
             else
+            {
                 lengthOfCommand = message.Content.Length;
+            }
 
             command = message.Content.Substring(1, lengthOfCommand - 1).ToLower();
 
@@ -139,7 +143,7 @@ namespace CosmicBot
             {
                 var user = _client.GetUserAsync(message.Author.Id).Result;
                 //var user = message.Author.Id;
-                await message.Channel.SendMessageAsync("You are -  " + user);
+                await message.Channel.SendMessageAsync("You are - " + user);
             } 
 
             //This command takes a single string input from the user, splits each "parameter" from the user that is seperated by a ","
@@ -240,7 +244,61 @@ namespace CosmicBot
                     await message.Channel.SendMessageAsync("Could not Rename your nation, please check that the old name is correct");
                 }
             }
+            //Takes 2 inputs, the system the user wants, and the users nation (Potential default if they have only 1?)
+            //Going to ignore fully implementing this command from this point on, as it will likely be more
+            //Complicated than anticipated
+            if (command.Equals("claimsystem"))
+            {
+                ulong user = message.Author.Id;
+                string claims = " ";
+                string[] claimsSplit = claims.Split(",");
+                if (message.Content.Contains(""))
+                {
+                    claims = message.Content.Substring(lengthOfCommand + 1);
+                    claimsSplit = claims.Split(", ");
+                }
+                try
+                {
+                    int sysID = int.Parse(claimsSplit[0]);
+                    int size = claimsSplit.Length;
+                    string natName;
+                    if(size == 2)
+                    {
+                        natName = claimsSplit[1];
+                    }
+                    else{ natName = tcnDB.GetUsersNations(user).First(); }
+                    bool isNation = tcnDB.IsUsersNation(natName, user);
+                    if (isNation == false)
+                    {
+                        await message.Channel.SendMessageAsync($"{natName} is not a nation currently, Please input one that does exist or create this one");
+                    }
+                    else
+                    {
+                        await message.Channel.SendMessageAsync($"Your Nation {natName}, has staked its claim for - {sysID}");
+                    }
+                }
+                catch
+                {
+                    await message.Channel.SendMessageAsync("Please input the command correctly");
+                }
+            }
 
+            //this command works, implement for claimsystems now
+            if (command.Equals("testing"))
+            {
+                ulong user = message.Author.Id;
+                string nation = message.Content.Substring(lengthOfCommand + 1);
+
+                bool test = tcnDB.IsUsersNation(nation, user);
+                if (test == false)
+                {
+                    await message.Channel.SendMessageAsync("Is False");
+                }
+                else
+                {
+                    await message.Channel.SendMessageAsync("is true");
+                }
+            }
 
 
         }
