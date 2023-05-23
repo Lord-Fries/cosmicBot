@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using System.Collections;
 using System.Net.NetworkInformation;
 using System.Diagnostics.Metrics;
+using System.Security.Principal;
 
 /*
  This Class will hold the queries required for the Database
@@ -96,7 +97,7 @@ namespace DatabaseConnectionClass
         {
             string query = "CALL pinging();";
             string dbPing;
-            if(this.OpenConnection() == true)
+            if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
                 MySqlDataReader dataReader;
@@ -123,7 +124,7 @@ namespace DatabaseConnectionClass
          */
         public void UserInsert(string nt, ulong dID)
         {
-            string query = $"INSERT INTO users(nameTag, discordID) VALUES('{nt}', '{dID}');"; 
+            string query = $"INSERT INTO users(nameTag, discordID) VALUES('{nt}', '{dID}');";
             if (this.OpenConnection() == true)
             {
                 MySqlCommand cmd = new MySqlCommand(query, connection);
@@ -152,12 +153,12 @@ namespace DatabaseConnectionClass
                 {
                     isUser = dataReader.GetInt64(0);
                     this.CloseConnection();
-                    if(isUser == 0)
+                    if (isUser == 0)
                     {
                         returnVal = 0;
                         return returnVal;
                     }
-                    else if(isUser == 1)
+                    else if (isUser == 1)
                     {
                         returnVal = 1;
                         return returnVal;
@@ -227,19 +228,19 @@ namespace DatabaseConnectionClass
             if (isUser == 0) //If they are a user
             {
                 int userDBID = GetUserDBID(uid); //The Users DB ID
-                if (userDBID == 0){ Console.WriteLine("Error with getting the user DBID"); }
+                if (userDBID == 0) { Console.WriteLine("Error with getting the user DBID"); }
                 else
                 {
-                   NationInsert(natName, uid, userDBID); 
+                    NationInsert(natName, uid, userDBID);
                 }
             }
             else if (isUser == 1) //If they are not a user
             {
                 UserInsert(nt, uid);
                 int userDBID = GetUserDBID(uid); //The Users DB ID
-                if (userDBID == 0) 
-                { 
-                    Console.WriteLine("Error with getting the user DBID"); 
+                if (userDBID == 0)
+                {
+                    Console.WriteLine("Error with getting the user DBID");
                 }
                 else
                 {
@@ -350,7 +351,8 @@ namespace DatabaseConnectionClass
             if (isUser == 0) //If they are a user
             {
                 int userDBID = GetUserDBID(uid); //The Users DB ID
-                if (userDBID == 0) { 
+                if (userDBID == 0)
+                {
                     Console.WriteLine("Error with getting the user DBID");
                     return false;
                 }
@@ -358,7 +360,7 @@ namespace DatabaseConnectionClass
                 { //The only path that matters here, the rest will return false as a
                   //nation would not have been made as a user would not have existed to create it
                     int isNation = IsNation(oldNM);
-                    if(isNation == 0)
+                    if (isNation == 0)
                     {
                         RenameNationUpdate(oldNM, newNM, userDBID);
                         return true;
@@ -373,8 +375,9 @@ namespace DatabaseConnectionClass
             {
                 UserInsert(nt, uid);
                 int userDBID = GetUserDBID(uid); //The Users DB ID
-                if (userDBID == 0) { 
-                    Console.WriteLine("Error with getting the user DBID"); 
+                if (userDBID == 0)
+                {
+                    Console.WriteLine("Error with getting the user DBID");
                     return false;
                 }
                 else
@@ -436,6 +439,58 @@ namespace DatabaseConnectionClass
                 return nations;
             }
         }
+
+        public int GetNationsUserDBID(string nation)
+        {
+            string query = $"SELECT userID FROM nations WHERE nationName = '{nation}';";
+            int userDBID;
+            try
+            {
+                if (this.OpenConnection() == true)
+                {
+                    MySqlCommand cmd = new MySqlCommand(query, connection);
+                    MySqlDataReader dataReader;
+                    dataReader = cmd.ExecuteReader(0);
+                    while (dataReader.Read())
+                    {
+                        userDBID = dataReader.GetInt32(0);
+                        this.CloseConnection();
+                        return userDBID;
+                    }
+                    this.CloseConnection();
+                    return 0;
+                }
+                return 0;
+            }
+            catch { return 0; }
+        }
+
+        public ulong GetNationsUser(string nation)
+        {
+            ulong zero = 0; //Purely to send a ulong 0 for incase a error happens
+            int userDBID = GetNationsUserDBID(nation);
+            ulong discordID;
+            string query = $"SELECT discordID FROM users WHERE userID = {userDBID};";
+            if (this.OpenConnection() == true && userDBID != 0)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+                dataReader = cmd.ExecuteReader(0);
+                while (dataReader.Read())
+                {
+                    discordID = dataReader.GetUInt64(0);
+                    this.CloseConnection();
+                    return discordID;
+                }
+                this.CloseConnection();
+                return zero;
+            }
+            this.CloseConnection();
+            return zero;
+        }
+
+
+
         //Insert statement
         public void Insert()
         {

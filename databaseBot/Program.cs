@@ -283,21 +283,29 @@ namespace CosmicBot
                 }
             }
 
-            //this command works, implement for claimsystems now
-            if (command.Equals("testing"))
+            //Lets the user find the owner of a nation
+            if (command.Equals("whoowns"))
             {
-                ulong user = message.Author.Id;
                 string nation = message.Content.Substring(lengthOfCommand + 1);
 
-                bool test = tcnDB.IsUsersNation(nation, user);
-                if (test == false)
+                ulong user = tcnDB.GetNationsUser(nation);
+                if(user != 0)
                 {
-                    await message.Channel.SendMessageAsync("Is False");
+                    string nameTag = _client.GetUserAsync(user).Result.ToString();
+                    await message.Channel.SendMessageAsync(nameTag);
                 }
                 else
                 {
-                    await message.Channel.SendMessageAsync("is true");
+                    await message.Channel.SendMessageAsync($"{nation} Does not Exist, did you input it correctly?");
                 }
+            }
+
+            if (command.Equals("test"))
+            {
+                string nation = message.Content.Substring(lengthOfCommand + 1);
+
+                int user = tcnDB.GetNationsUserDBID(nation);
+                await message.Channel.SendMessageAsync($"{user}");
             }
 
 
