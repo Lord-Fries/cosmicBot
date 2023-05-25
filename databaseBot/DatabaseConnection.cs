@@ -329,6 +329,33 @@ namespace DatabaseConnectionClass
             }
         }
 
+        public bool CheckNationUpdate(string newNM, int userDBID)
+        {
+            string query = $"SELECT nationName FROM nations WHERE nationName = '{newNM}' AND  userID = {userDBID} LIMIT 1;";
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                MySqlDataReader dataReader;
+                dataReader = cmd.ExecuteReader(0);
+                while (dataReader.Read())
+                {
+                    var curName = dataReader.GetString(0);
+                    this.CloseConnection();
+                    if (curName == newNM)
+                    {
+                        return true; //Returns true only when the current name in the database matches the new nations name
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                this.CloseConnection();
+                return false;
+            }
+            this.CloseConnection();
+            return false;
+        }
         public void RenameNationUpdate(string oldNM, string newNM, int userDBID) //actually renames the nation
         {
             int nationDBID = GetNationDBID(oldNM);
@@ -363,7 +390,9 @@ namespace DatabaseConnectionClass
                     if (isNation == 0)
                     {
                         RenameNationUpdate(oldNM, newNM, userDBID);
-                        return true;
+                        bool check = CheckNationUpdate(newNM, userDBID);
+                        if(check == true){ return true; }
+                        else { return false; }
                     }
                     else
                     {

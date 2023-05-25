@@ -236,7 +236,7 @@ namespace CosmicBot
                     }
                     else
                     {
-                        await message.Channel.SendMessageAsync("could not rename your nation, please check if you had inputted the command correctly");
+                        await message.Channel.SendMessageAsync("could not rename your nation, please check if you had inputted the command correctly or that you own the nation you are trying to rename");
                     }
                 }
                 catch
@@ -302,6 +302,32 @@ namespace CosmicBot
 
             if (command.Equals("test"))
             {
+                string oldName = "Ecrel";
+                string newName = "Smilegate";
+                ulong user = message.Author.Id;
+                var nameTag = _client.GetUserAsync(user).Result.ToString();
+
+                if(nameTag != null)
+                {
+                    bool rename = tcnDB.RenameNation(oldName, newName, user, nameTag);
+                    if (rename == true)
+                    {
+                        await message.Channel.SendMessageAsync("Success");
+                    }
+                    if (rename == false)
+                    {
+                        await message.Channel.SendMessageAsync("Failure");
+                    }
+                }
+                else
+                {
+                    await message.Channel.SendMessageAsync("I could not pull your User Id, are you sure you exist?");
+                }
+
+            }
+
+            if (command.Equals("double"))
+            {
                 // Create a new ComponentBuilder, in which dropdowns & buttons can be created.
                 var cb = new ComponentBuilder()
                     .WithButton("One", "double-trouble-one", ButtonStyle.Success)
@@ -340,11 +366,6 @@ namespace CosmicBot
                     Console.WriteLine("An ID has been received that has no handler!");
                 }
             }
-
-
-
-
-
         }
     }
 }
