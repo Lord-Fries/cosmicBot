@@ -491,6 +491,8 @@ namespace DatabaseConnectionClass
 
 
 
+
+        // These statements will be removed once I am finished with this class
         //Insert statement
         public void Insert()
         {

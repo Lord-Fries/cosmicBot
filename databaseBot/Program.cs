@@ -135,7 +135,7 @@ namespace CosmicBot
                 // This button needs to be build by calling .Build() before being passed into the call.
                 //Calls the pinger method from the DBconnection Class, this will grab the Pong string from the database
                 string ping = tcnDB.pinger();
-                Console.WriteLine(ping);
+                //Console.WriteLine(ping);
                 await message.Channel.SendMessageAsync(ping, components: cb.Build());
             }
             //This command returns the Discord ID of who sends the command
@@ -302,27 +302,49 @@ namespace CosmicBot
 
             if (command.Equals("test"))
             {
-                await message.Channel.SendMessageAsync($"This Command does nothing currently, good try tho");
+                // Create a new ComponentBuilder, in which dropdowns & buttons can be created.
+                var cb = new ComponentBuilder()
+                    .WithButton("One", "double-trouble-one", ButtonStyle.Success)
+                    .WithButton("Two", "double-trouble-two", ButtonStyle.Danger);
+
+                // Send a message with content 'pong', including a button.
+                // This button needs to be build by calling .Build() before being passed into the call.
+                //Calls the pinger method from the DBconnection Class, this will grab the Pong string from the database
+                string ping = tcnDB.pinger();
+                await message.Channel.SendMessageAsync(ping, components: cb.Build());
             }
 
 
         }
 
-            // For better functionality & a more developer-friendly approach to handling any kind of interaction, refer to:
-            // https://discordnet.dev/guides/int_framework/intro.html
-            private async Task InteractionCreatedAsync(SocketInteraction interaction)
+        // For better functionality & a more developer-friendly approach to handling any kind of interaction, refer to:
+        // https://discordnet.dev/guides/int_framework/intro.html
+        private async Task InteractionCreatedAsync(SocketInteraction interaction)
         {
             // safety-casting is the best way to prevent something being cast from being null.
             // If this check does not pass, it could not be cast to said type.
             if (interaction is SocketMessageComponent component)
             {
                 // Check for the ID created in the button mentioned above.
-                if (component.Data.CustomId == "unique-id")
-                    await interaction.RespondAsync("Thank you for clicking my button!");
-
-                else
+                if (component.Data.CustomId == "unique-id") {
+                    await interaction.RespondAsync("Thank you for clicking my button!"); 
+                }
+                else if(component.Data.CustomId == "double-trouble-one"){
+                    await interaction.RespondAsync("You Hit the Green Button!");
+                }
+                else if(component.Data.CustomId == "double-trouble-two")
+                {
+                    await interaction.RespondAsync("You hit the Red Button!");
+                }
+                else {
                     Console.WriteLine("An ID has been received that has no handler!");
+                }
             }
+
+
+
+
+
         }
     }
 }
